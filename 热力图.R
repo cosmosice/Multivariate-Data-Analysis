@@ -1,0 +1,51 @@
+rm(list = ls())
+library(mapdata)
+library(maptools)
+library(ggplot2)
+library(plyr)
+china_map=rgdal::readOGR('E:/数统研究生/多元数据分析/总集/第一章/数据/热力图地图文件/bou2_4p.shp')
+plot(china_map)
+ggplot(china_map,aes(x=long,y=lat,group=group))+
+  geom_polygon(fill="white",colour="black")+
+  coord_map("polyconic")+
+  theme(
+    panel.grid=element_blank(),
+    panel.background=element_blank(),
+    axis.text=element_blank(),
+    axis.ticks=element_blank(),
+    axis.title=element_blank(),
+    legend.position=c(0.2,0.3)
+  )
+x<-china_map@data
+xs<-data.frame(x,id=seq(0:924)-1)
+china_map1<-fortify(china_map)
+china_map_data<-join(china_map1,xs,type="full")#基于id进行连接
+mydata<-read.csv('E:/数统研究生/多元数据分析/总集/第一章/数据/换手率data.csv',header=T,as.is=T)
+china_data <- join(china_map_data, mydata, type="full")#基于地名进行连接
+
+ggplot(china_data,aes(x=long,y=lat,group=group,fill=换手率))+
+  geom_polygon(colour="grey40")+
+  scale_fill_gradient(low="white",high="red")+
+  coord_map("polyconic")+
+  theme(
+    panel.grid=element_blank(),
+    panel.background=element_blank(),
+    axis.text=element_blank(),
+    axis.ticks=element_blank(),
+    axis.title=element_blank(),
+    legend.position=c(0.2,0.3)
+  )
+
+province_city<-read.csv('E:/数统研究生/多元数据分析/总集/第一章/数据/热力图地图文件/chinaprovincecity.csv',header=T,as.is=T)#获取省会城市坐标
+ggplot(china_data,aes(long,lat))+
+  geom_polygon(aes(group=group,fill=换手率),colour="grey",size=0.01)+
+  scale_fill_gradient(low="white",high="red")+
+  coord_map("polyconic")+
+  geom_text(aes(x=jd,y=wd,label=city),data=province_city,colour="black",size=2.5)+
+  theme(
+    panel.grid=element_blank(),
+    panel.background=element_blank(),
+    axis.text=element_blank(),
+    axis.ticks=element_blank(),
+    axis.title=element_blank()
+  )
